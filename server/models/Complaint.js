@@ -1,7 +1,12 @@
 const mongoose = require('mongoose');
 
 const complaintSchema = new mongoose.Schema({
-  title: { type: String, required: true, trim: true },
+  title:
+   { 
+      type: String,
+      required: true,
+      trim: true 
+   },
   description: { type: String, required: true },
   category: { type: String, enum: ['Academic', 'Infrastructure', 'Safety', 'Other'], default: 'Other' },
   priorityScore: { type: Number, default: 0, min: 0, max: 100 },
