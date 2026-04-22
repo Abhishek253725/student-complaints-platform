@@ -11,35 +11,46 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Define allowed origins
+// ✅ CORS fix
 const allowedOrigins = [
   'http://localhost:5173',
-  process.env.CLIENT_URL
-].filter(Boolean); // ✅ removes undefined
+  'http://localhost:5174',
+  'https://voice-rank-ai-project-ahdz.vercel.app',
+  process.env.CLIENT_URL,
+].filter(Boolean);
 
-// ✅ CORS middleware
+// ✅ Preflight ke liye OPTIONS handle karo
+app.options('*', cors());
+
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow postman/server calls (no origin)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log('CORS blocked origin:', origin);
       callback(new Error('CORS not allowed'));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 app.use(express.json());
 
-// ✅ Socket.io (ONLY ONCE)
+// ✅ Socket.io
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
-    methods: ['GET', 'POST']
+    methods: ['GET', 'POST'],
+    credentials: true,
   }
 });
 
-// Routes
+// ✅ Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/complaints', require('./routes/complaints'));
 app.use('/api/votes', require('./routes/votes'));
@@ -48,13 +59,13 @@ app.use('/api/ai', require('./routes/ai'));
 // Socket connection
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
-  socket.on('disconnect', () => console.log('Client disconnected:', socket.id));
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
 });
 
-// Make io accessible in routes
 app.set('io', io);
 
 app.get('/', (req, res) => res.json({ message: 'VoiceRank AI API running' }));
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const PORT = process.env.PORT || 5000;  
