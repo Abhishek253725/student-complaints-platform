@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import axios from 'axios'
+import API from '../api/api'  // ✅ axios instance use karo - token auto lagega
 import toast from 'react-hot-toast'
 import { TrendingUp, ThumbsUp, ThumbsDown, CheckCircle, Clock, PlusCircle } from 'lucide-react'
-
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 function PriorityBadge({ level }) {
   const map = {
@@ -53,7 +51,6 @@ export default function StudentDashboard() {
   const [submitting, setSubmitting] = useState(false)
 
   // ── Stats derived from real data ──────────────────────────────────────────
-  // createdBy field use hoga (backend se aata hai)
   const myComplaints = complaints.filter(c => {
     const createdById = c.createdBy?._id || c.createdBy
     return String(createdById) === String(user?._id)
@@ -71,11 +68,7 @@ export default function StudentDashboard() {
   const fetchComplaints = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
-      const { data } = await axios.get(`${API}/complaints`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      // Backend returns { complaints: [], total, ... }
+      const { data } = await API.get('/complaints') // ✅ API instance - token auto
       setComplaints(Array.isArray(data) ? data : data.complaints || [])
     } catch (err) {
       console.error('Fetch error:', err)
@@ -93,21 +86,15 @@ export default function StudentDashboard() {
 
     setSubmitting(true)
     try {
-      const token = localStorage.getItem('token')
-      const { data } = await axios.post(
-        `${API}/complaints`,
-        {
-          title:       form.title.trim(),
-          description: form.description.trim(),
-          category:    form.category,
-          anonymous:   form.anonymous,   // backend: isAnonymous handle karta hai
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      const { data } = await API.post('/complaints', {  // ✅ API instance
+        title:       form.title.trim(),
+        description: form.description.trim(),
+        category:    form.category,
+        anonymous:   form.anonymous,
+      })
 
-      // Backend returns { complaint: {...} }
       const newComplaint = data.complaint || data
-      setComplaints(prev => [newComplaint, ...prev])
+      setComplaints(prev => [newComplaint, ...prev])  // ✅ Real-time update
       setForm({ title: '', description: '', category: 'Other', anonymous: false })
       toast.success('Complaint submitted successfully! ✨')
     } catch (err) {
@@ -121,17 +108,12 @@ export default function StudentDashboard() {
   // ── Vote ──────────────────────────────────────────────────────────────────
   const handleVote = async (id, type) => {
     try {
-      const token = localStorage.getItem('token')
-      const { data } = await axios.put(
-        `${API}/complaints/${id}/vote`,
-        { type },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      const { data } = await API.put(`/complaints/${id}/vote`, { type }) // ✅ API instance
       const updated = data.complaint || data
       setComplaints(prev =>
-        prev.map(c => c._id === id ? { ...c, ...updated } : c)
+        prev.map(c => c._id === id ? { ...c, ...updated } : c) // ✅ Real-time update
       )
-      toast.success('Vote recorded!')
+      toast.success(type === 'up' ? '👍 Upvoted!' : '👎 Downvoted!')
     } catch (err) {
       console.error('Vote error:', err)
       toast.error('Could not record vote')

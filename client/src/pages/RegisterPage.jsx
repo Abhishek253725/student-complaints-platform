@@ -191,7 +191,7 @@ export default function RegisterPage() {
             <div className="space-y-5 animate-fade-in">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Full Name</label>
-                <input name="name" type="text" placeholder="John Doe"
+                <input name="name" type="text" placeholder="Enter your name"
                   value={form.name} onChange={change} className="input-field" autoFocus />
               </div>
               <div>

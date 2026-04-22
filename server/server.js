@@ -24,9 +24,7 @@ app.options('*', cors());
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow postman/server calls (no origin)
     if (!origin) return callback(null, true);
-    
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -56,7 +54,7 @@ app.use('/api/complaints', require('./routes/complaints'));
 app.use('/api/votes', require('./routes/votes'));
 app.use('/api/ai', require('./routes/ai'));
 
-// Socket connection
+// ✅ Socket connection
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
   socket.on('disconnect', () => {
@@ -66,6 +64,13 @@ io.on('connection', (socket) => {
 
 app.set('io', io);
 
-app.get('/', (req, res) => res.json({ message: 'VoiceRank AI API running' }));
+// ✅ Test Route
+app.get('/', (req, res) => {
+  res.json({ message: 'VoiceRank AI API running ✅' });
+});
 
-const PORT = process.env.PORT || 5000;  
+// ✅ YE MISSING THA - Server Listen
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});

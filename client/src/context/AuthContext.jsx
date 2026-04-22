@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import API from '../api/api' // ✅ USE CENTRAL API
+import API from '../api/api'
 
 const AuthContext = createContext(null)
 
@@ -7,22 +7,31 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // ✅ Load user from localStorage on refresh
+  // ✅ Refresh pe token check karo
   useEffect(() => {
     const token = localStorage.getItem('vr_token')
     const userData = localStorage.getItem('vr_user')
 
     if (token && userData) {
-      setUser(JSON.parse(userData))
+      try {
+        setUser(JSON.parse(userData))
+      } catch {
+        // ✅ Corrupt data clear karo
+        localStorage.removeItem('vr_token')
+        localStorage.removeItem('vr_user')
+      }
     }
 
     setLoading(false)
   }, [])
 
-  // ✅ LOGIN
+  // ✅ LOGIN - /api fix kiya
   const login = async (email, password) => {
     try {
-      const res = await API.post('/api/auth/login', { email, password })
+      const res = await API.post('/auth/login', { email, password })
+      // ✅ /api/auth/login → baseURL already has localhost:5000
+      // ✅ routes mein /api/auth hai
+      // ✅ isliye sirf /auth/login likhna hai
 
       const { token, user } = res.data
 
@@ -30,17 +39,17 @@ export function AuthProvider({ children }) {
       localStorage.setItem('vr_user', JSON.stringify(user))
 
       setUser(user)
-
       return user
+
     } catch (err) {
       throw err
     }
   }
 
-  // ✅ REGISTER
+  // ✅ REGISTER - /api fix kiya
   const register = async (name, email, password, role = 'student') => {
     try {
-      const res = await API.post('/api/auth/register', {
+      const res = await API.post('/auth/register', {
         name,
         email,
         password,
@@ -53,8 +62,8 @@ export function AuthProvider({ children }) {
       localStorage.setItem('vr_user', JSON.stringify(user))
 
       setUser(user)
-
       return user
+
     } catch (err) {
       throw err
     }
